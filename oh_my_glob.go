@@ -5,26 +5,41 @@ import (
 	"strings"
 )
 
+type part struct {
+	stars int8 // 0, 1, or 2
+	lit string
+}
+
+var starstar part = part {
+	stars: 2,
+	lit: "",
+}
+
+var star part = part {
+	stars: 1,
+	lit: "",
+}
+
 type Glob struct {
 	// this is for pretty-printing the glob
 	original string
 	// we pre-break the glob at `/` boundaries for less processing
 	// later
-	parts []interface{}
+	parts []part
 }
 
-type starstar struct{}
-type star struct{}
-
 func Compile(glob string) Glob {
-	var parts []interface{}
+	var parts []part
 	for _, fragment := range strings.Split(glob, "/") {
 		if fragment == "**" {
-			parts = append(parts, starstar{})
+			parts = append(parts, starstar)
 		} else if fragment == "*" {
-			parts = append(parts, star{})
+			parts = append(parts, star)
 		} else {
-			parts = append(parts, fragment)
+			parts = append(parts, part {
+				stars: 0,
+				lit: fragment,
+			})
 		}
 	}
 	return Glob{
@@ -87,19 +102,19 @@ func (g *Glob) Match(path string) bool {
 	for px < len(g.parts) || nx < len(chunks) {
 		if px < len(g.parts) {
 			c := g.parts[px]
-			switch v := c.(type) {
-			case string:
-				if nx < len(chunks) && match(v, chunks[nx]) {
+			switch c.stars {
+			case 0:
+				if nx < len(chunks) && match(c.lit, chunks[nx]) {
 					px++
 					nx++
 					continue
 				}
-			case starstar:
+			case 2:
 				nextPx = px
 				nextNx = nx + 1
 				px++
 				continue
-			case star:
+			case 1:
 				if nx < len(chunks) {
 					px++
 					nx++
