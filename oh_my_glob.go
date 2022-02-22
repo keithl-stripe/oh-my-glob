@@ -7,17 +7,17 @@ import (
 
 type part struct {
 	stars int8 // 0, 1, or 2
-	lit string
+	lit   string
 }
 
-var starstar part = part {
+var starstar part = part{
 	stars: 2,
-	lit: "",
+	lit:   "",
 }
 
-var star part = part {
+var star part = part{
 	stars: 1,
-	lit: "",
+	lit:   "",
 }
 
 type Glob struct {
@@ -36,9 +36,9 @@ func Compile(glob string) Glob {
 		} else if fragment == "*" {
 			parts = append(parts, star)
 		} else {
-			parts = append(parts, part {
+			parts = append(parts, part{
 				stars: 0,
-				lit: fragment,
+				lit:   fragment,
 			})
 		}
 	}
