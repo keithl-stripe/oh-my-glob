@@ -6,8 +6,10 @@ import (
 )
 
 type part struct {
-	stars int8 // 0, 1, or 2
-	lit   string
+	// 0, 1, or 2
+	stars int8
+	// only set if stars == 0
+	lit string
 }
 
 var starstar part = part{
