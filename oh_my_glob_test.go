@@ -14,34 +14,47 @@ func testCase(t *testing.T, glob string, path string, expected bool) {
 	}
 }
 
-func BenchmarkCompileLiteralPaths(b *testing.B) {
+func benchmarkCompile(b *testing.B, glob string) {
 	for i := 0; i < b.N; i++ {
-		Compile("dev/lib/the_cmd/commands/commands.yaml")
+		Compile(glob)
 	}
+}
+
+func benchmarkMatch(b *testing.B, glob, path string) {
+	compiled := Compile(glob)
+
+	for i := 0; i < b.N; i++ {
+		compiled.Match(path)
+	}
+}
+
+func BenchmarkCompileLiteralPaths(b *testing.B) {
+	benchmarkCompile(b, "dev/lib/the_cmd/commands/commands.yaml")
 }
 
 func BenchmarkLiteralPaths(b *testing.B) {
 	path := "dev/lib/the_cmd/commands/commands.yaml"
-	glob := Compile(path)
-
-	for i := 0; i < b.N; i++ {
-		glob.Match(path);
-	}
+	benchmarkMatch(b, path, path)
 }
 
 func BenchmarkCompileSubdirFromRoot(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		Compile("**/*.yaml")
-	}
+	benchmarkCompile(b, "**/*.yaml")
 }
 
 func BenchmarkSubdirFromRoot(b *testing.B) {
-	path := "dev/lib/the_cmd/commands/commands.yaml"
-	glob := Compile("**/*.yaml")
+	benchmarkMatch(b, "**/*.yaml", "dev/lib/the_cmd/commands/commands.yaml")
+}
 
-	for i := 0; i < b.N; i++ {
-		glob.Match(path);
-	}
+func BenchmarkNegativeSubdirFromRoot(b *testing.B) {
+	benchmarkMatch(b, "**/*.yaml", "dev/lib/the_cmd/commands/build_from_scratch.rb")
+}
+
+func BenchmarkRecursiveFixedFile(b *testing.B) {
+	benchmarkMatch(b, "**/__package.rb", "dev/lib/the_cmd/commands/__package.rb")
+}
+
+func BenchmarkNegativeRecursiveFixedFile(b *testing.B) {
+	benchmarkMatch(b, "**/__package.rb", "dev/lib/the_cmd/commands/build_from_scratch.rb")
 }
 
 func TestBasicGlob(t *testing.T) {
@@ -101,18 +114,23 @@ func TestDoubleStar(t *testing.T) {
 	testCase(t, "**/bar", "bar", true)
 	testCase(t, "**/bar", "foo/baz", false)
 	testCase(t, "**/bar", "foo/bar/bar", true)
+	testCase(t, "**/bar", "foo/baz/foobar", false)
 
 	// paths with double-star wildcards at end
 	testCase(t, "foo/**", "foo/bar", true)
+	testCase(t, "foo/**", "foo-other/bar", false)
 	testCase(t, "foo/**", "foo", true)
 	testCase(t, "foo/**", "baz/bar", false)
 	testCase(t, "foo/**", "foo/baz/bar", true)
+	testCase(t, "foo/**", "foo-other/baz/bar", false)
 
 	// paths with double-star wildcards in the middle
 	testCase(t, "foo/**/bar", "foo/bar", true)
 	testCase(t, "foo/**/bar", "foo/this/bar", true)
 	testCase(t, "foo/**/bar", "foo/this/that/bar", true)
+	testCase(t, "foo/**/bar", "foo/this/that/the-other-bar", false)
 	testCase(t, "foo/**/bar", "foo/this/that/the-other/bar", true)
+	testCase(t, "foo/**/bar", "foo/this/that/the-other/the-other-bar", false)
 	testCase(t, "foo/**/bar", "this/that/the-other/bar", false)
 	testCase(t, "foo/**/bar", "foo/this/that/the-other", false)
 	testCase(t, "foo/**/bar", "this/that/the-other", false)
@@ -124,4 +142,6 @@ func TestCombined(t *testing.T) {
 	testCase(t, "config/**/*.conf", "config/this/foo.conf", true)
 	testCase(t, "config/**/*.conf", "config/this/that/foo.conf", true)
 	testCase(t, "config/**/*.conf", "something/else.conf", false)
+
+	testCase(t, "**/*.conf", "config/this/that/foo.conf", true)
 }
