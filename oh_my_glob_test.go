@@ -49,12 +49,44 @@ func BenchmarkNegativeSubdirFromRoot(b *testing.B) {
 	benchmarkMatch(b, "**/*.yaml", "dev/lib/the_cmd/commands/build_from_scratch.rb")
 }
 
+func BenchmarkWildcardTail(b *testing.B) {
+	benchmarkMatch(b, "dev/lib/the_cmd/commands/*", "dev/lib/the_cmd/commands/commands.yaml")
+}
+
+func BenchmarkNegativeWildcardTail(b *testing.B) {
+	benchmarkMatch(b, "dev/lib/the_cmd/commands/*", "ved/bil/dmc_eht/sdnammoc/blah")
+}
+
+func BenchmarkPrefixedSubdirFromRoot(b *testing.B) {
+	benchmarkMatch(b, "dev/**/*.yaml", "dev/lib/the_cmd/commands/commands.yaml")
+}
+
+func BenchmarkNegativePrefixedSubdirFromRoot(b *testing.B) {
+	benchmarkMatch(b, "dev/**/*.yaml", "dev/lib/the_cmd/commands/build_from_scratch.rb")
+}
+
 func BenchmarkRecursiveFixedFile(b *testing.B) {
 	benchmarkMatch(b, "**/__package.rb", "dev/lib/the_cmd/commands/__package.rb")
 }
 
 func BenchmarkNegativeRecursiveFixedFile(b *testing.B) {
 	benchmarkMatch(b, "**/__package.rb", "dev/lib/the_cmd/commands/build_from_scratch.rb")
+}
+
+func BenchmarkPrefixedRecursiveFixedFile(b *testing.B) {
+	benchmarkMatch(b, "dev/**/__package.rb", "dev/lib/the_cmd/commands/__package.rb")
+}
+
+func BenchmarkNegativePrefixedRecursiveFixedFile(b *testing.B) {
+	benchmarkMatch(b, "dev/**/__package.rb", "dev/lib/the_cmd/commands/build_from_scratch.rb")
+}
+
+func BenchmarkFixedPathWildcardFile(b *testing.B) {
+	benchmarkMatch(b, "dev/lib/the_cmd/commands/*.yaml", "dev/lib/the_cmd/commands/commands.yaml")
+}
+
+func BenchmarkNegativeFixedPathWildcardFile(b *testing.B) {
+	benchmarkMatch(b, "dev/lib/the_cmd/commands/*.yaml", "dev/lib/the_cmd/commands/build_from_scratch.rb")
 }
 
 func TestBasicGlob(t *testing.T) {
@@ -144,4 +176,11 @@ func TestCombined(t *testing.T) {
 	testCase(t, "config/**/*.conf", "something/else.conf", false)
 
 	testCase(t, "**/*.conf", "config/this/that/foo.conf", true)
+}
+
+func TestWildcardSuffix(t *testing.T) {
+	testCase(t, "config/*.conf", "config/foo.conf", true)
+	testCase(t, "config/*.conf", "config/this/foo.conf", false)
+	testCase(t, "config/*.conf", "config/this/that/foo.conf", false)
+	testCase(t, "config/*.conf", "something/else.conf", false)
 }
