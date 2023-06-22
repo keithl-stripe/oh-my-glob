@@ -52,6 +52,10 @@ type Glob struct {
 	parts []part
 }
 
+func (g *Glob) Original() string {
+	return g.original
+}
+
 func (p *part) isWildcardSuffix() bool {
 	if p.kind != literal {
 		return false
