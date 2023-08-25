@@ -43,6 +43,19 @@ var star part = part{
 	lit:  "",
 }
 
+// Glob represents a pre-compiled glob which can be efficiently
+// matched against paths.
+//
+// Glob strings understood by [oh_my_glob] can include the following:
+//   - Literal string fragments, which match themselves. For example,
+//     the glob "foo" will match only the string "foo".
+//   - Single asterisks ("*"), which match any string of any length
+//     that does not include a forward slash. For example, the glob "x*"
+//     will match "xa", "xaaaaa", or "x", but will not match "x/y".
+//   - Double asterisks ("**"), which match zero or more subdirectories
+//     i.e. zero or more strings in between forward slashes. For example,
+//     the glob "x/**/y" will match "x/a/y", "x/a/b/c/y", or "x/y", but
+//     will not match "a/b/y" or "x/a/b".
 type Glob struct {
 	// this is for pretty-printing the glob
 	original string
@@ -52,6 +65,8 @@ type Glob struct {
 	parts []part
 }
 
+// Original returns the string that was originally passed to [Compile]
+// to create this [Glob] struct.
 func (g *Glob) Original() string {
 	return g.original
 }
@@ -149,6 +164,10 @@ func recursiveWildcardFixedFilePattern(parts []part) (bool, []part) {
 	return true, prefixSlice
 }
 
+// Compile takes a string representing a glob and turns it into a
+// [Glob] struct which can be efficiently matched against other
+// strings. For the characters which have a special meaning within
+// globs, see the documentation for the [Glob] struct.
 func Compile(glob string) Glob {
 	if glob == "" {
 		return Glob{
@@ -414,6 +433,8 @@ func (g *Glob) matchFixedPathWildcardSuffix(path string) bool {
 	return strings.IndexByte(path[len(g.parts[0].lit):], '/') == -1
 }
 
+// Match takes a string and returns a bool representing whether the
+// string matches the pattern represented by the [Glob].
 func (g *Glob) Match(path string) bool {
 	switch g.kind {
 	case generalParts:
